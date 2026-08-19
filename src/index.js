@@ -1,7 +1,9 @@
 require('dotenv').config();
 
-if (!process.env.APP_URL) {
-  throw new Error("APP_URL is not set in .env. It is required for building asset URLs.");
+const requiredEnvs = ['APP_URL', 'JWT_SECRET', 'DATABASE_URL', 'SUPABASE_URL'];
+const missingEnvs = requiredEnvs.filter(envVar => !process.env[envVar]);
+if (missingEnvs.length > 0) {
+  throw new Error(`Missing required environment variables: ${missingEnvs.join(', ')}. Please check your .env file.`);
 }
 
 const express = require('express');

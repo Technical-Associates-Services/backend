@@ -5,4 +5,20 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# Temporary / Migration / Seed / Test scripts
+test.js
+test_*.js
+check_images.js
+migrate.js
+migrate_to_supabase.js
+upload_media.js
+seed_admin.js
+*.sql
+
+# Legacy static/PHP server artifacts
+public/error_log
+public/index.php
+public/web.config
+public/.htaccess
 public/frontend/images/
