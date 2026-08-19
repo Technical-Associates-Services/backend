@@ -290,3 +290,35 @@ exports.getSolutionBySlug = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getReferences = async (req, res) => {
+  try {
+    const categories = await prisma.referenceCategory.findMany({
+      where: { status: 1 },
+      orderBy: { id: 'asc' },
+      include: {
+        references: {
+          where: { status: 1 },
+          orderBy: { id: 'desc' }
+        }
+      }
+    });
+
+    const formattedCategories = categories.map(cat => ({
+      ...cat,
+      references: cat.references.map(ref => ({
+        ...ref,
+        image: getImageUrl('references', ref.image)
+      }))
+    }));
+
+    res.json({
+      result: "success",
+      categories: formattedCategories
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+

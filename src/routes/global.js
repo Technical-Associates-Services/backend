@@ -35,4 +35,7 @@ router.get('/pages/:page', globalController.getPageBySlug);
 router.get('/solutions', globalController.getSolutions);
 router.get('/solutions/:solution', globalController.getSolutionBySlug);
 
+// References
+router.get('/references', globalController.getReferences);
+
 module.exports = router;
