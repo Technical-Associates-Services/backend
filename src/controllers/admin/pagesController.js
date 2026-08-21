@@ -33,7 +33,7 @@ exports.createPage = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Page created', page: newPage });
   } catch (error) {
     console.error('Error creating page:', error);
-    res.status(500).json({ error: 'Failed to create page', detail: error.message });
+    res.status(500).json({ error: 'Failed to create page' });
   }
 };
 
@@ -55,7 +55,7 @@ exports.updatePage = async (req, res) => {
     res.json({ result: 'success', message: 'Page updated', page: updatedPage });
   } catch (error) {
     console.error('Error updating page:', error);
-    res.status(500).json({ error: 'Failed to update page', detail: error.message });
+    res.status(500).json({ error: 'Failed to update page' });
   }
 };
 

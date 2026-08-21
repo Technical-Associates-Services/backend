@@ -57,7 +57,7 @@ exports.createAssociate = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Associate created', associate: newAssociate });
   } catch (error) {
     console.error('Error creating associate:', error);
-    res.status(500).json({ error: 'Failed to create associate', detail: error.message });
+    res.status(500).json({ error: 'Failed to create associate' });
   }
 };
 
@@ -82,7 +82,7 @@ exports.updateAssociate = async (req, res) => {
     res.json({ result: 'success', message: 'Associate updated', associate: updatedAssociate });
   } catch (error) {
     console.error('Error updating associate:', error);
-    res.status(500).json({ error: 'Failed to update associate', detail: error.message });
+    res.status(500).json({ error: 'Failed to update associate' });
   }
 };
 

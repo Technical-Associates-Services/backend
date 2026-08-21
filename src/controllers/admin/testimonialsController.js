@@ -21,7 +21,7 @@ exports.createTestimonial = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Testimonial created', testimonial: newItem });
   } catch (error) {
     console.error('Error creating testimonial:', error);
-    res.status(500).json({ error: 'Failed to create testimonial', detail: error.message });
+    res.status(500).json({ error: 'Failed to create testimonial' });
   }
 };
 
@@ -44,7 +44,7 @@ exports.updateTestimonial = async (req, res) => {
     res.json({ result: 'success', message: 'Testimonial updated', testimonial: updated });
   } catch (error) {
     console.error('Error updating testimonial:', error);
-    res.status(500).json({ error: 'Failed to update testimonial', detail: error.message });
+    res.status(500).json({ error: 'Failed to update testimonial' });
   }
 };
 

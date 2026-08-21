@@ -18,7 +18,7 @@ exports.createBrand = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Brand created', brand: newItem });
   } catch (error) {
     console.error('Error creating brand:', error);
-    res.status(500).json({ error: 'Failed to create brand', detail: error.message });
+    res.status(500).json({ error: 'Failed to create brand' });
   }
 };
 
@@ -33,7 +33,7 @@ exports.updateBrand = async (req, res) => {
     res.json({ result: 'success', message: 'Brand updated', brand: updated });
   } catch (error) {
     console.error('Error updating brand:', error);
-    res.status(500).json({ error: 'Failed to update brand', detail: error.message });
+    res.status(500).json({ error: 'Failed to update brand' });
   }
 };
 

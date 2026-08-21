@@ -29,7 +29,7 @@ exports.createCatalogue = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Catalogue created', catalogue: newCatalogue });
   } catch (error) {
     console.error('Error creating catalogue:', error);
-    res.status(500).json({ error: 'Failed to create catalogue', detail: error.message });
+    res.status(500).json({ error: 'Failed to create catalogue' });
   }
 };
 
@@ -50,7 +50,7 @@ exports.updateCatalogue = async (req, res) => {
     res.json({ result: 'success', message: 'Catalogue updated', catalogue: updatedCatalogue });
   } catch (error) {
     console.error('Error updating catalogue:', error);
-    res.status(500).json({ error: 'Failed to update catalogue', detail: error.message });
+    res.status(500).json({ error: 'Failed to update catalogue' });
   }
 };
 

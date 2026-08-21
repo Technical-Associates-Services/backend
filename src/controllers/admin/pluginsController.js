@@ -30,7 +30,7 @@ exports.createPlugin = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Plugin created', plugin: newPlugin });
   } catch (error) {
     console.error('Error creating plugin:', error);
-    res.status(500).json({ error: 'Failed to create plugin', detail: error.message });
+    res.status(500).json({ error: 'Failed to create plugin' });
   }
 };
 
@@ -51,7 +51,7 @@ exports.updatePlugin = async (req, res) => {
     res.json({ result: 'success', message: 'Plugin updated', plugin: updatedPlugin });
   } catch (error) {
     console.error('Error updating plugin:', error);
-    res.status(500).json({ error: 'Failed to update plugin', detail: error.message });
+    res.status(500).json({ error: 'Failed to update plugin' });
   }
 };
 

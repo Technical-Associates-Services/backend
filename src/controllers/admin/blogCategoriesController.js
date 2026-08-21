@@ -32,7 +32,7 @@ exports.createBlogCategory = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Blog category created', category: newCat });
   } catch (error) {
     console.error('Error creating blog category:', error);
-    res.status(500).json({ error: 'Failed to create blog category', detail: error.message });
+    res.status(500).json({ error: 'Failed to create blog category' });
   }
 };
 
@@ -54,7 +54,7 @@ exports.updateBlogCategory = async (req, res) => {
     res.json({ result: 'success', message: 'Blog category updated', category: updatedCat });
   } catch (error) {
     console.error('Error updating blog category:', error);
-    res.status(500).json({ error: 'Failed to update blog category', detail: error.message });
+    res.status(500).json({ error: 'Failed to update blog category' });
   }
 };
 

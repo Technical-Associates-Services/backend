@@ -31,7 +31,7 @@ exports.createConcern = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Sister Concern created', concern: newConcern });
   } catch (error) {
     console.error('Error creating concern:', error);
-    res.status(500).json({ error: 'Failed to create sister concern', detail: error.message });
+    res.status(500).json({ error: 'Failed to create sister concern' });
   }
 };
 
@@ -53,7 +53,7 @@ exports.updateConcern = async (req, res) => {
     res.json({ result: 'success', message: 'Sister Concern updated', concern: updatedConcern });
   } catch (error) {
     console.error('Error updating concern:', error);
-    res.status(500).json({ error: 'Failed to update sister concern', detail: error.message });
+    res.status(500).json({ error: 'Failed to update sister concern' });
   }
 };
 

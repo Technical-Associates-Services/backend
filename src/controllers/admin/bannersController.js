@@ -21,7 +21,7 @@ exports.createBanner = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Banner created', banner: newBanner });
   } catch (error) {
     console.error('Error creating banner:', error);
-    res.status(500).json({ error: 'Failed to create banner', detail: error.message });
+    res.status(500).json({ error: 'Failed to create banner' });
   }
 };
 
@@ -45,7 +45,7 @@ exports.updateBanner = async (req, res) => {
     res.json({ result: 'success', message: 'Banner updated', banner: updatedBanner });
   } catch (error) {
     console.error('Error updating banner:', error);
-    res.status(500).json({ error: 'Failed to update banner', detail: error.message });
+    res.status(500).json({ error: 'Failed to update banner' });
   }
 };
 

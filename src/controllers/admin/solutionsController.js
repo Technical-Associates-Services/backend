@@ -36,7 +36,7 @@ exports.createSolution = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Solution created', solution: newSolution });
   } catch (error) {
     console.error('Error creating solution:', error);
-    res.status(500).json({ error: 'Failed to create solution', detail: error.message });
+    res.status(500).json({ error: 'Failed to create solution' });
   }
 };
 
@@ -59,7 +59,7 @@ exports.updateSolution = async (req, res) => {
     res.json({ result: 'success', message: 'Solution updated', solution: updatedSolution });
   } catch (error) {
     console.error('Error updating solution:', error);
-    res.status(500).json({ error: 'Failed to update solution', detail: error.message });
+    res.status(500).json({ error: 'Failed to update solution' });
   }
 };
 

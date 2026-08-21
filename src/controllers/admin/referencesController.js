@@ -59,7 +59,7 @@ exports.createReference = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Reference created', reference: newReference });
   } catch (error) {
     console.error('Error creating reference:', error);
-    res.status(500).json({ error: 'Failed to create reference', detail: error.message });
+    res.status(500).json({ error: 'Failed to create reference' });
   }
 };
 
@@ -85,7 +85,7 @@ exports.updateReference = async (req, res) => {
     res.json({ result: 'success', message: 'Reference updated', reference: updatedReference });
   } catch (error) {
     console.error('Error updating reference:', error);
-    res.status(500).json({ error: 'Failed to update reference', detail: error.message });
+    res.status(500).json({ error: 'Failed to update reference' });
   }
 };
 

@@ -28,7 +28,7 @@ exports.createBlog = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Blog created', blog: newBlog });
   } catch (error) {
     console.error('Error creating blog:', error);
-    res.status(500).json({ error: 'Failed to create blog', detail: error.message });
+    res.status(500).json({ error: 'Failed to create blog' });
   }
 };
 
@@ -55,7 +55,7 @@ exports.updateBlog = async (req, res) => {
     res.json({ result: 'success', message: 'Blog updated', blog: updatedBlog });
   } catch (error) {
     console.error('Error updating blog:', error);
-    res.status(500).json({ error: 'Failed to update blog', detail: error.message });
+    res.status(500).json({ error: 'Failed to update blog' });
   }
 };
 

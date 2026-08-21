@@ -42,7 +42,7 @@ exports.createFaq = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'FAQ created', faq: newFaq });
   } catch (error) {
     console.error('Error creating FAQ:', error);
-    res.status(500).json({ error: 'Failed to create FAQ', detail: error.message });
+    res.status(500).json({ error: 'Failed to create FAQ' });
   }
 };
 
@@ -65,7 +65,7 @@ exports.updateFaq = async (req, res) => {
     res.json({ result: 'success', message: 'FAQ updated', faq: updatedFaq });
   } catch (error) {
     console.error('Error updating FAQ:', error);
-    res.status(500).json({ error: 'Failed to update FAQ', detail: error.message });
+    res.status(500).json({ error: 'Failed to update FAQ' });
   }
 };
 

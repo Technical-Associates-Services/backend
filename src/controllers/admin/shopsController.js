@@ -29,7 +29,7 @@ exports.createShop = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Shop created', shop: newShop });
   } catch (error) {
     console.error('Error creating shop:', error);
-    res.status(500).json({ error: 'Failed to create shop', detail: error.message });
+    res.status(500).json({ error: 'Failed to create shop' });
   }
 };
 
@@ -50,7 +50,7 @@ exports.updateShop = async (req, res) => {
     res.json({ result: 'success', message: 'Shop updated', shop: updatedShop });
   } catch (error) {
     console.error('Error updating shop:', error);
-    res.status(500).json({ error: 'Failed to update shop', detail: error.message });
+    res.status(500).json({ error: 'Failed to update shop' });
   }
 };
 

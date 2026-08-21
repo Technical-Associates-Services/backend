@@ -1,14 +1,14 @@
 const prisma = require('../../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await prisma.adminUser.findMany({
+    const users = await prisma.user.findMany({
       select: {
         id: true,
         email: true,
-        username: true,
-        status: true,
+        name: true,
+        phone_number: true,
         created_at: true
       },
       orderBy: { id: 'desc' }
@@ -22,21 +22,22 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { email, password, username, status } = req.body;
+    const { email, password, name, phone_number } = req.body;
     
     // Check if exists
-    const existing = await prisma.adminUser.findFirst({ where: { email } });
+    const existing = await prisma.user.findFirst({ where: { email } });
     if (existing) return res.status(400).json({ error: 'Email already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const newUser = await prisma.adminUser.create({
+    const newUser = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        username: username || email.split('@')[0],
-        status: status !== undefined ? parseInt(status) : 1,
-        created_at: new Date()
+        name: name || email.split('@')[0],
+        phone_number: phone_number || null,
+        created_at: new Date(),
+        updated_at: new Date()
       }
     });
 
@@ -50,12 +51,12 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, password, username, status } = req.body;
+    const { email, password, name, phone_number } = req.body;
 
     const data = {
       email,
-      username,
-      status: parseInt(status),
+      name,
+      phone_number,
       updated_at: new Date()
     };
 
@@ -63,7 +64,7 @@ exports.updateUser = async (req, res) => {
       data.password = await bcrypt.hash(password, 10);
     }
 
-    await prisma.adminUser.update({
+    await prisma.user.update({
       where: { id: parseInt(id) },
       data
     });
@@ -80,11 +81,11 @@ exports.deleteUser = async (req, res) => {
     const { id } = req.params;
     
     // Don't delete self
-    if (req.user && req.user.id === parseInt(id)) {
+    if (req.user && (req.user.userId === parseInt(id) || req.user.id === parseInt(id))) {
       return res.status(400).json({ error: 'Cannot delete yourself' });
     }
 
-    await prisma.adminUser.delete({
+    await prisma.user.delete({
       where: { id: parseInt(id) }
     });
     res.json({ result: 'success', message: 'User deleted' });

@@ -8,15 +8,48 @@ if (missingEnvs.length > 0) {
 
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Trust proxy for reverse proxy deployments (Render, Vercel, Nginx)
+app.set('trust proxy', 1);
+
+// Configure CORS driven by environment variables
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'https://tas-admin.vercel.app',
+      'https://tas-frontend.vercel.app'
+    ];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked: Origin ${origin} is not allowed`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(require('path').join(__dirname, '../public'))); // Serve static files
+
+const { globalLimiter } = require('./middleware/rateLimiter');
+
+// Global API rate limiter (300 requests per 15 minutes)
+app.use('/api', globalLimiter);
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -114,6 +147,9 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err.message && err.message.startsWith('CORS blocked')) {
+    return res.status(403).json({ error: 'Forbidden: Request origin not permitted by CORS policy' });
+  }
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

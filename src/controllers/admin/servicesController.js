@@ -33,7 +33,7 @@ exports.createService = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Service created', service: newService });
   } catch (error) {
     console.error('Error creating service:', error);
-    res.status(500).json({ error: 'Failed to create service', detail: error.message });
+    res.status(500).json({ error: 'Failed to create service' });
   }
 };
 
@@ -55,7 +55,7 @@ exports.updateService = async (req, res) => {
     res.json({ result: 'success', message: 'Service updated', service: updatedService });
   } catch (error) {
     console.error('Error updating service:', error);
-    res.status(500).json({ error: 'Failed to update service', detail: error.message });
+    res.status(500).json({ error: 'Failed to update service' });
   }
 };
 

@@ -40,7 +40,7 @@ exports.createJob = async (req, res) => {
     res.status(201).json({ result: 'success', message: 'Job created', job: newJob });
   } catch (error) {
     console.error('Error creating job:', error);
-    res.status(500).json({ error: 'Failed to create job', detail: error.message });
+    res.status(500).json({ error: 'Failed to create job' });
   }
 };
 
@@ -63,7 +63,7 @@ exports.updateJob = async (req, res) => {
     res.json({ result: 'success', message: 'Job updated', job: updatedJob });
   } catch (error) {
     console.error('Error updating job:', error);
-    res.status(500).json({ error: 'Failed to update job', detail: error.message });
+    res.status(500).json({ error: 'Failed to update job' });
   }
 };
 
