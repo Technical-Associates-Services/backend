@@ -46,7 +46,46 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(require('path').join(__dirname, '../public'))); // Serve static files
 
+const prisma = require('./config/db');
 const { globalLimiter } = require('./middleware/rateLimiter');
+
+// Health Check Endpoint (Public / Unauthenticated / Real DB Ping)
+// Prevents Render free-tier sleep (15m) and Supabase free-tier auto-pause (7d)
+const healthCheckHandler = async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const result = await prisma.$queryRaw`SELECT NOW() as db_time, 1 as active`;
+    const latencyMs = Date.now() - startTime;
+    return res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: {
+        status: 'connected',
+        latency_ms: latencyMs,
+        db_time: result[0]?.db_time,
+        active: Number(result[0]?.active)
+      },
+      uptime_seconds: Math.floor(process.uptime())
+    });
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+    console.error('Health check database query error:', error.message);
+    return res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      database: {
+        status: 'unreachable',
+        latency_ms: latencyMs,
+        error: error.message
+      },
+      uptime_seconds: Math.floor(process.uptime())
+    });
+  }
+};
+
+// Mount health check on both /health and /api/health (exempt from strict rate limiter)
+app.get('/health', healthCheckHandler);
+app.get('/api/health', healthCheckHandler);
 
 // Global API rate limiter (300 requests per 15 minutes)
 app.use('/api', globalLimiter);

@@ -6,7 +6,7 @@ require('dotenv').config();
 // Create a connection pool using the pooled URL
 // For the backend application, we use the DATABASE_URL (the transaction pooler) 
 // to handle many concurrent connections effectively.
-const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL;
 
 const pool = new Pool({ 
   connectionString,
