@@ -16,29 +16,90 @@ const PORT = process.env.PORT || 3000;
 // Trust proxy for reverse proxy deployments (Render, Vercel, Nginx)
 app.set('trust proxy', 1);
 
-// Configure CORS driven by environment variables
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'https://tas-admin.vercel.app',
-      'https://tas-frontend.vercel.app'
-    ];
+// Configure CORS driven by environment variables and default safe domains
+const rawAllowed = [
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+  'https://tas.com.np',
+  'https://www.tas.com.np',
+  'https://tas-frontend.vercel.app',
+  'https://tas-admin.vercel.app',
+  'https://tas-mainfrontend.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173',
+  'http://localhost:5174'
+];
+
+// Normalize allowed origins (strip whitespace and trailing slashes)
+const allowedOrigins = Array.from(new Set(
+  rawAllowed
+    .filter(Boolean)
+    .map(o => o.trim().replace(/\/+$/, ''))
+));
+
+// Extract root domain suffixes (apex + all subdomains supported)
+const domainSuffixes = new Set(['tas.com.np']);
+allowedOrigins.forEach(originStr => {
+  try {
+    const hostname = new URL(originStr).hostname.toLowerCase();
+    if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.vercel.app')) {
+      return;
+    }
+    domainSuffixes.add(hostname.replace(/^www\./, ''));
+  } catch {
+    const raw = originStr.replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
+    if (raw && !raw.includes('localhost')) domainSuffixes.add(raw);
+  }
+});
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, curl, server-to-server)
+    // Allow non-browser requests (Postman, curl, server-to-server, mobile apps)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    const cleanOrigin = origin.trim().replace(/\/+$/, '');
+
+    // 1. Direct match or wildcard '*' in allowedOrigins
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
       return callback(null, true);
     }
+    // 2. Vercel previews & production deployments (*.vercel.app)
+    if (cleanOrigin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    // 3. Localhost & local IP on any port
+    if (cleanOrigin.includes('localhost') || cleanOrigin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    // 4. Wildcard suffix check (covers apex, www, and all subdomains)
+    try {
+      const requestHost = new URL(cleanOrigin).hostname.toLowerCase();
+      for (const suffix of domainSuffixes) {
+        if (requestHost === suffix || requestHost.endsWith('.' + suffix)) {
+          return callback(null, true);
+        }
+      }
+    } catch {
+      for (const suffix of domainSuffixes) {
+        if (cleanOrigin.endsWith(suffix)) return callback(null, true);
+      }
+    }
+
     return callback(new Error(`CORS blocked: Origin ${origin} is not allowed`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'apikey',
+    'x-api-key',
+    'Accept',
+    'Origin'
+  ]
 };
 
 app.use(cors(corsOptions));
@@ -106,6 +167,8 @@ app.get('/api/media/:folder/:filename', async (req, res) => {
     if (!response.ok) return res.status(response.status).send('Image not found');
     const contentType = response.headers.get('content-type');
     if (contentType) res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    res.set('Access-Control-Allow-Origin', '*');
     const stream = require('stream');
     stream.Readable.fromWeb(response.body).pipe(res);
   } catch (error) {

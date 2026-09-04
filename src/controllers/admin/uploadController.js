@@ -101,10 +101,15 @@ exports.uploadImage = async (req, res) => {
       return res.status(500).json({ error: 'Failed to upload file to storage' });
     }
 
+    let baseUrl = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+    if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = baseUrl.includes('localhost') ? `http://${baseUrl}` : `https://${baseUrl}`;
+    }
+
     res.json({
       result: 'success',
       fileName: fileName,
-      url: `${process.env.APP_URL}/api/media/${filePath}`
+      url: `${baseUrl}/api/media/${filePath}`
     });
 
   } catch (error) {

@@ -2,13 +2,16 @@ const fs = require('fs');
 const path = require('path');
 
 const getImageUrl = (location, filename) => {
-  const baseUrl = process.env.APP_URL; // Now guaranteed to exist due to index.js check
+  let baseUrl = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+  if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    baseUrl = baseUrl.includes('localhost') ? `http://${baseUrl}` : `https://${baseUrl}`;
+  }
   
   if (!filename) {
     return `${baseUrl}/logo.png`;
   }
   
-  if (filename.startsWith('http')) {
+  if (filename.startsWith('http://') || filename.startsWith('https://')) {
     return filename;
   }
   
