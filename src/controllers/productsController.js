@@ -199,9 +199,15 @@ exports.getProductBySlug = async (req, res) => {
           result: "success",
           product: {
             id: category.id,
+            slug: category.slug,
             title: category.title,
+            subtitle: category.subtitle,
             description: category.description,
             image: getImageUrl('categories', category.image),
+            seo_title: category.seo_title,
+            seo_keyword: category.seo_keywords,
+            seo_description: category.seo_description,
+            is_category: true,
             additionals: categoryProducts.map(formatProduct) // Pass products as additionals so frontend renders them as cards!
           },
           products: [],

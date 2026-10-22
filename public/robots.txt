@@ -1,2 +1,9 @@
+# Technical Associates Services (TAS) Backend Robots.txt
 User-agent: *
-Disallow:
+Allow: /sitemap.xml
+Allow: /api/sitemap.xml
+Allow: /api/media/
+Disallow: /api/admin/
+Disallow: /api/auth/
+
+Sitemap: https://tas.com.np/sitemap.xml

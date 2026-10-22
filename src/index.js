@@ -148,6 +148,11 @@ const healthCheckHandler = async (req, res) => {
 app.get('/health', healthCheckHandler);
 app.get('/api/health', healthCheckHandler);
 
+// Dynamic Sitemap Endpoint (Public, unauthenticated, exempt from strict rate limiter)
+const { getSitemap } = require('./controllers/sitemapController');
+app.get('/sitemap.xml', getSitemap);
+app.get('/api/sitemap.xml', getSitemap);
+
 // Global API rate limiter (300 requests per 15 minutes)
 app.use('/api', globalLimiter);
 
