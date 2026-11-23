@@ -7,7 +7,7 @@ exports.createBlog = async (req, res) => {
 
     // category_id is required in schema — use 1 as default if not provided
     const catId = category_id ? parseInt(category_id) : 1;
-    
+
     const newBlog = await prisma.blog.create({
       data: {
         title,

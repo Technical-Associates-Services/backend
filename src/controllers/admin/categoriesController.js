@@ -3,16 +3,16 @@ const prisma = require('../../config/db');
 exports.createCategory = async (req, res) => {
   try {
     const { title, slug, subtitle, description, parent_category, seo_title, seo_keywords, seo_description, status, order } = req.body;
-    
+
     // We expect image/icon paths to be sent in the body if they were uploaded via the upload endpoint
     const image = req.body.image || null;
     const icon = req.body.icon || null;
 
     // In a real app, user_id should come from the logged-in admin token
-    const user_id = req.user ? req.user.id : 1; 
+    const user_id = req.user ? req.user.id : 1;
 
-    const parentVal = (parent_category === '' || parent_category === '0' || parent_category === null || parent_category === undefined) 
-      ? null 
+    const parentVal = (parent_category === '' || parent_category === '0' || parent_category === null || parent_category === undefined)
+      ? null
       : parent_category.toString();
 
     const newCategory = await prisma.category.create({
