@@ -1,4 +1,5 @@
 const prisma = require('../../config/db');
+const { deleteFromStorage } = require('../../utils/mediaService');
 
 exports.createCategory = async (req, res) => {
   try {
@@ -44,7 +45,23 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, slug, subtitle, description, parent_category, seo_title, seo_keywords, seo_description, status, order, image, icon } = req.body;
+    const { title, slug, subtitle, description, parent_category, seo_title, seo_keywords, seo_description, status, order, image, icon, pdf } = req.body;
+
+    const existing = await prisma.category.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (existing) {
+      if (image !== undefined && image !== existing.image && existing.image) {
+        await deleteFromStorage('categories', existing.image);
+      }
+      if (icon !== undefined && icon !== existing.icon && existing.icon) {
+        await deleteFromStorage('categories', existing.icon);
+      }
+      if (pdf !== undefined && pdf !== existing.pdf && existing.pdf) {
+        await deleteFromStorage('categories', existing.pdf);
+      }
+    }
 
     const data = {
       title,
@@ -56,6 +73,7 @@ exports.updateCategory = async (req, res) => {
       seo_description,
       image,
       icon,
+      pdf,
       updated_at: new Date()
     };
 
@@ -88,6 +106,16 @@ exports.updateCategory = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.category.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (existing) {
+      if (existing.image) await deleteFromStorage('categories', existing.image);
+      if (existing.icon) await deleteFromStorage('categories', existing.icon);
+      if (existing.pdf) await deleteFromStorage('categories', existing.pdf);
+    }
+
     await prisma.category.delete({
       where: { id: parseInt(id) }
     });

@@ -71,6 +71,7 @@ exports.getCategories = async (req, res) => {
             slug: c.slug,
             title: c.title,
             subtitle: c.subtitle,
+            parent_category: c.parent_category,
             icon: getImageUrl('categories', c.icon),
             link: c.link,
             pdf: c.pdf ? getImageUrl('categories', c.pdf) : null,

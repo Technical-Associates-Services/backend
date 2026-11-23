@@ -1,4 +1,7 @@
 const multer = require('multer');
+const path = require('path');
+const sharp = require('sharp');
+const { saveToDiskCache, deleteFromStorage, cleanSupabaseOrphans } = require('../../utils/mediaService');
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -9,12 +12,11 @@ const ALLOWED_MIME_TYPES = [
   'application/pdf'
 ];
 
-// Configure Multer with strict 5MB size limit and MIME validation
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5 MB max
+    fileSize: 10 * 1024 * 1024 // 10 MB max
   },
   fileFilter: (req, file, cb) => {
     if (ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
@@ -31,7 +33,7 @@ exports.uploadMiddleware = (req, res, next) => {
   singleUpload(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'File size exceeds maximum allowed limit of 5MB' });
+        return res.status(400).json({ error: 'File size exceeds maximum allowed limit of 10MB' });
       }
       return res.status(400).json({ error: err.message || 'File upload error' });
     }
@@ -39,7 +41,6 @@ exports.uploadMiddleware = (req, res, next) => {
   });
 };
 
-// Lazy-initialize Supabase client so env vars are loaded first
 let supabase = null;
 const getSupabase = () => {
   if (!supabase) {
@@ -52,15 +53,27 @@ const getSupabase = () => {
   return supabase;
 };
 
+const SIZING_PRESETS = {
+  brands: { width: 400, height: 400, quality: 85 },
+  associates: { width: 400, height: 400, quality: 85 },
+  categories: { width: 600, height: 600, quality: 80 },
+  testimonials: { width: 400, height: 400, quality: 80 },
+  products: { width: 1200, height: 1200, quality: 80 },
+  solutions: { width: 1200, height: 1200, quality: 80 },
+  blogs: { width: 1200, height: 800, quality: 80 },
+  services: { width: 800, height: 600, quality: 80 },
+  concerns: { width: 600, height: 400, quality: 80 },
+  banners: { width: 1600, height: 900, quality: 80 },
+  general: { width: 1200, height: 1200, quality: 80 }
+};
+
 exports.uploadImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Determine the folder based on the request (default to 'general')
     const folder = req.body.folder || 'general';
-    
     const isPdf = req.file.mimetype === 'application/pdf';
     const isSvg = req.file.mimetype === 'image/svg+xml';
     let fileBuffer;
@@ -69,7 +82,7 @@ exports.uploadImage = async (req, res) => {
 
     if (isPdf) {
       fileBuffer = req.file.buffer;
-      const originalExt = req.file.originalname ? require('path').extname(req.file.originalname) || '.pdf' : '.pdf';
+      const originalExt = req.file.originalname ? path.extname(req.file.originalname) || '.pdf' : '.pdf';
       fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${originalExt}`;
       contentType = 'application/pdf';
     } else if (isSvg) {
@@ -77,31 +90,32 @@ exports.uploadImage = async (req, res) => {
       fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.svg`;
       contentType = 'image/svg+xml';
     } else {
-      // Process image with sharp: auto-orient, resize dimensions, and compress to webp
-      const sharp = require('sharp');
-      const maxDimension = folder === 'banners' ? 1920 : 1200;
+      // Process image with sharp: enforce context-aware dimension presets, strip EXIF, convert to WebP
+      const preset = SIZING_PRESETS[folder] || SIZING_PRESETS.general;
       fileBuffer = await sharp(req.file.buffer)
-        .rotate() // auto-orient based on EXIF
+        .rotate() // Auto-orient based on EXIF and strip metadata
         .resize({
-          width: maxDimension,
-          height: maxDimension,
+          width: preset.width,
+          height: preset.height,
           fit: 'inside',
           withoutEnlargement: true
         })
-        .webp({ quality: 78, effort: 4 })
+        .webp({ quality: preset.quality, effort: 4 })
         .toBuffer();
       fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
       contentType = 'image/webp';
     }
     
-    const filePath = `${folder}/${fileName}`;
+    // 1. Immediately pre-cache to Render local SSD disk cache
+    saveToDiskCache(fileName, fileBuffer);
 
-    // Upload to Supabase Storage
-    const { data, error } = await getSupabase().storage
+    // 2. Upload to Supabase Storage tas_media bucket
+    const filePath = `${folder}/${fileName}`;
+    const { error } = await getSupabase().storage
       .from('tas_media')
       .upload(filePath, fileBuffer, {
         contentType,
-        upsert: false
+        upsert: true
       });
 
     if (error) {
@@ -123,5 +137,21 @@ exports.uploadImage = async (req, res) => {
   } catch (error) {
     console.error('Upload Error:', error);
     res.status(500).json({ error: 'Internal server error during upload' });
+  }
+};
+
+/**
+ * POST /api/upload/cleanup-orphans
+ */
+exports.cleanupOrphans = async (req, res) => {
+  try {
+    const report = await cleanSupabaseOrphans();
+    return res.json({
+      result: 'success',
+      message: `Orphan cleanup complete: purged ${report.purgedCount} orphaned file(s)`,
+      data: report
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || 'Failed to cleanup orphan files' });
   }
 };

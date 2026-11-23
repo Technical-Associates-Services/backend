@@ -163,23 +163,15 @@ const productsRoutes = require('./routes/products');
 const blogsRoutes = require('./routes/blogs');
 const contactsRoutes = require('./routes/contacts');
 
-// Proxy route to hide Supabase URL and cache at CDN edge
-app.get('/api/media/:folder/:filename', async (req, res) => {
-  const { folder, filename } = req.params;
-  const targetUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/tas_media/${folder}/${filename}`;
-  try {
-    const response = await fetch(targetUrl);
-    if (!response.ok) return res.status(response.status).send('Image not found');
-    const contentType = response.headers.get('content-type');
-    if (contentType) res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
-    res.set('Access-Control-Allow-Origin', '*');
-    const stream = require('stream');
-    stream.Readable.fromWeb(response.body).pipe(res);
-  } catch (error) {
-    console.error('Proxy image error:', error);
-    res.status(500).send('Error proxying image');
-  }
+// Import media streaming service with local SSD caching and HTTP 304 conditional revalidation
+const { handleMediaStreaming } = require('./utils/mediaService');
+
+// Media Streaming Endpoint with Render /tmp/ SSD caching & HTTP 304 revalidation
+app.get('/api/media/:folder/:filename', (req, res) => {
+  return handleMediaStreaming(req, res, req.params.folder, req.params.filename);
+});
+app.get('/api/media/:bucket/:filename', (req, res) => {
+  return handleMediaStreaming(req, res, req.params.bucket, req.params.filename);
 });
 
 // Use Routes
@@ -264,4 +256,22 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+  // Database 24-hour keep-alive heartbeat to prevent Supabase 7-day inactivity auto-pause natively
+  const KEEP_ALIVE_INTERVAL = 24 * 60 * 60 * 1000;
+  const runKeepAlive = async () => {
+    try {
+      const prisma = require('./config/db');
+      const result = await prisma.$queryRaw`SELECT 1 as keep_alive, NOW() as current_time`;
+      console.log('[Supabase Keep-Alive] Ping succeeded:', result);
+    } catch (err) {
+      console.error('[Supabase Keep-Alive] Ping error:', err.message);
+    }
+  };
+
+  // Initial startup ping
+  runKeepAlive();
+
+  const keepAliveTimer = setInterval(runKeepAlive, KEEP_ALIVE_INTERVAL);
+  if (keepAliveTimer.unref) keepAliveTimer.unref();
 });

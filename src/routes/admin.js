@@ -20,8 +20,10 @@ const associatesController = require('../controllers/admin/associatesController'
 // All admin routes must be protected
 router.use(authMiddleware);
 
-// --- Media Upload ---
+// --- Media Upload & Cleanup ---
 router.post('/upload', uploadController.uploadMiddleware, uploadController.uploadImage);
+router.post('/upload/cleanup-orphans', uploadController.cleanupOrphans);
+router.post('/cleanup-orphans', uploadController.cleanupOrphans);
 
 // --- Categories ---
 router.post('/categories', categoriesController.createCategory);

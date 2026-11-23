@@ -1,4 +1,5 @@
 const prisma = require('../../config/db');
+const { deleteFromStorage } = require('../../utils/mediaService');
 
 exports.createProduct = async (req, res) => {
   try {
@@ -48,8 +49,21 @@ exports.updateProduct = async (req, res) => {
     const {
       title, slug, category_id, brand_id, summary, description,
       warranty, specification, installation, price, sale_price,
-      type, stock, seo_title, seo_keyword, seo_description, status, image
+      type, stock, seo_title, seo_keyword, seo_description, status, image, download
     } = req.body;
+
+    const existing = await prisma.product.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (existing) {
+      if (image !== undefined && image !== existing.image && existing.image) {
+        await deleteFromStorage('products', existing.image);
+      }
+      if (download !== undefined && download !== existing.download && existing.download) {
+        await deleteFromStorage('products', existing.download);
+      }
+    }
 
     const data = {
       title,
@@ -67,6 +81,7 @@ exports.updateProduct = async (req, res) => {
       seo_keyword,
       seo_description,
       image,
+      download,
       updated_at: new Date()
     };
 
@@ -101,10 +116,40 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.product.delete({
-      where: { id: parseInt(id) }
+    const productId = parseInt(id);
+
+    const existing = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: true,
+        downloads: true
+      }
     });
-    res.json({ result: 'success', message: 'Product deleted' });
+
+    if (existing) {
+      if (existing.image) await deleteFromStorage('products', existing.image);
+      if (existing.download) await deleteFromStorage('products', existing.download);
+      if (Array.isArray(existing.images)) {
+        for (const img of existing.images) {
+          if (img.filename) await deleteFromStorage('products', img.filename);
+        }
+      }
+      if (Array.isArray(existing.downloads)) {
+        for (const dl of existing.downloads) {
+          if (dl.filename) await deleteFromStorage('products', dl.filename);
+        }
+      }
+
+      await prisma.image.deleteMany({ where: { product_id: productId } });
+      await prisma.downloadFile.deleteMany({ where: { product_id: productId } });
+      await prisma.productReview.deleteMany({ where: { product_id: productId } });
+      await prisma.productEnquiry.deleteMany({ where: { product_id: productId } });
+    }
+
+    await prisma.product.delete({
+      where: { id: productId }
+    });
+    res.json({ result: 'success', message: 'Product and associated media deleted' });
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ error: 'Failed to delete product' });
