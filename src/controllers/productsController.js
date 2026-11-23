@@ -22,6 +22,9 @@ const formatProduct = (product) => {
     id: product.id,
     slug: product.slug,
     title: product.title,
+    category_id: product.category_id,
+    brand_id: product.brand_id,
+    status: product.status,
     description: product.description,
     summary: product.summary,
     image: getImageUrl('products', product.image),
@@ -130,10 +133,12 @@ exports.getCategoryBySlug = async (req, res) => {
 // GET /api/products
 exports.getProducts = async (req, res) => {
   try {
+    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
     const products = await prisma.product.findMany({
       where: { status: 1 },
       include: { brand: true, category: true },
-      orderBy: { id: 'desc' }
+      orderBy: { id: 'desc' },
+      ...(limit && !isNaN(limit) && limit > 0 ? { take: limit } : {})
     });
 
     res.json({

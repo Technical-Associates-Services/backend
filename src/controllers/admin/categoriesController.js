@@ -11,18 +11,22 @@ exports.createCategory = async (req, res) => {
     // In a real app, user_id should come from the logged-in admin token
     const user_id = req.user ? req.user.id : 1; 
 
+    const parentVal = (parent_category === '' || parent_category === '0' || parent_category === null || parent_category === undefined) 
+      ? null 
+      : parent_category.toString();
+
     const newCategory = await prisma.category.create({
       data: {
         title,
         slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         subtitle: subtitle || null,
         description: description || null,
-        parent_category: parent_category || null,
+        parent_category: parentVal,
         seo_title: seo_title || null,
         seo_keywords: seo_keywords || null,
         seo_description: seo_description || null,
-        status: status !== undefined ? parseInt(status) : 1,
-        order: order !== undefined ? parseInt(order) : 0,
+        status: status !== undefined && !isNaN(parseInt(status)) ? parseInt(status) : 1,
+        order: order !== undefined && !isNaN(parseInt(order)) ? parseInt(order) : 0,
         image,
         icon,
         user_id,
@@ -42,23 +46,36 @@ exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const { title, slug, subtitle, description, parent_category, seo_title, seo_keywords, seo_description, status, order, image, icon } = req.body;
 
+    const data = {
+      title,
+      slug,
+      subtitle,
+      description,
+      seo_title,
+      seo_keywords,
+      seo_description,
+      image,
+      icon,
+      updated_at: new Date()
+    };
+
+    if (parent_category !== undefined) {
+      data.parent_category = (parent_category === '' || parent_category === '0' || parent_category === null)
+        ? null
+        : parent_category.toString();
+    }
+
+    if (status !== undefined && !isNaN(parseInt(status))) {
+      data.status = parseInt(status);
+    }
+
+    if (order !== undefined && !isNaN(parseInt(order))) {
+      data.order = parseInt(order);
+    }
+
     const updatedCategory = await prisma.category.update({
       where: { id: parseInt(id) },
-      data: {
-        title,
-        slug,
-        subtitle,
-        description,
-        parent_category,
-        seo_title,
-        seo_keywords,
-        seo_description,
-        status: parseInt(status),
-        order: parseInt(order),
-        image,
-        icon,
-        updated_at: new Date()
-      }
+      data
     });
 
     res.json({ result: 'success', message: 'Category updated', category: updatedCategory });

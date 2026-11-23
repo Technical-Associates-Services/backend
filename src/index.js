@@ -163,7 +163,7 @@ const productsRoutes = require('./routes/products');
 const blogsRoutes = require('./routes/blogs');
 const contactsRoutes = require('./routes/contacts');
 
-// Proxy route to hide Supabase URL
+// Proxy route to hide Supabase URL and cache at CDN edge
 app.get('/api/media/:folder/:filename', async (req, res) => {
   const { folder, filename } = req.params;
   const targetUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/tas_media/${folder}/${filename}`;
@@ -172,7 +172,7 @@ app.get('/api/media/:folder/:filename', async (req, res) => {
     if (!response.ok) return res.status(response.status).send('Image not found');
     const contentType = response.headers.get('content-type');
     if (contentType) res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    res.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
     res.set('Access-Control-Allow-Origin', '*');
     const stream = require('stream');
     stream.Readable.fromWeb(response.body).pipe(res);

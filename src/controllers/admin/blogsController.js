@@ -39,13 +39,17 @@ exports.updateBlog = async (req, res) => {
 
     const data = {
       title, slug, summary, description, image,
-      status: parseInt(status),
       seo_title: seo_title || null,
       seo_keyword: seo_keyword || null,
       seo_description: seo_description || null,
       updated_at: new Date()
     };
-    if (category_id) data.category_id = parseInt(category_id);
+    if (category_id !== undefined && category_id !== null && category_id !== '' && !isNaN(parseInt(category_id))) {
+      data.category_id = parseInt(category_id);
+    }
+    if (status !== undefined && status !== null && !isNaN(parseInt(status))) {
+      data.status = parseInt(status);
+    }
 
     const updatedBlog = await prisma.blog.update({
       where: { id: parseInt(id) },

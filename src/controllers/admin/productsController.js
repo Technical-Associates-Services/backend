@@ -2,13 +2,13 @@ const prisma = require('../../config/db');
 
 exports.createProduct = async (req, res) => {
   try {
-    const { 
-      title, slug, category_id, brand_id, summary, description, 
-      warranty, specification, installation, price, sale_price, 
+    const {
+      title, slug, category_id, brand_id, summary, description,
+      warranty, specification, installation, price, sale_price,
       type, stock, seo_title, seo_keyword, seo_description, status, image
     } = req.body;
-    
-    const user_id = req.user ? req.user.id : 1; 
+
+    const user_id = req.user ? req.user.id : 1;
 
     const newProduct = await prisma.product.create({
       data: {
@@ -45,35 +45,50 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      title, slug, category_id, brand_id, summary, description, 
-      warranty, specification, installation, price, sale_price, 
-      type, stock, seo_title, seo_keyword, seo_description, status, image 
+    const {
+      title, slug, category_id, brand_id, summary, description,
+      warranty, specification, installation, price, sale_price,
+      type, stock, seo_title, seo_keyword, seo_description, status, image
     } = req.body;
+
+    const data = {
+      title,
+      slug,
+      summary,
+      description,
+      warranty,
+      specification,
+      installation,
+      price,
+      sale_price,
+      type,
+      stock,
+      seo_title,
+      seo_keyword,
+      seo_description,
+      image,
+      updated_at: new Date()
+    };
+
+    if (category_id !== undefined && category_id !== null && category_id !== '' && !isNaN(parseInt(category_id))) {
+      data.category_id = parseInt(category_id);
+    }
+
+    if (brand_id !== undefined) {
+      if (brand_id === null || brand_id === '' || brand_id === 0 || brand_id === '0') {
+        data.brand_id = null;
+      } else if (!isNaN(parseInt(brand_id))) {
+        data.brand_id = parseInt(brand_id);
+      }
+    }
+
+    if (status !== undefined && status !== null && !isNaN(parseInt(status))) {
+      data.status = parseInt(status);
+    }
 
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id) },
-      data: {
-        title,
-        slug,
-        category_id: parseInt(category_id),
-        brand_id: brand_id ? parseInt(brand_id) : null,
-        summary,
-        description,
-        warranty,
-        specification,
-        installation,
-        price,
-        sale_price,
-        type,
-        stock,
-        seo_title,
-        seo_keyword,
-        seo_description,
-        status: parseInt(status),
-        image,
-        updated_at: new Date()
-      }
+      data
     });
 
     res.json({ result: 'success', message: 'Product updated', product: updatedProduct });

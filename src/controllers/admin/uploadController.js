@@ -77,10 +77,18 @@ exports.uploadImage = async (req, res) => {
       fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.svg`;
       contentType = 'image/svg+xml';
     } else {
-      // Process image with sharp: compress and convert to webp
+      // Process image with sharp: auto-orient, resize dimensions, and compress to webp
       const sharp = require('sharp');
+      const maxDimension = folder === 'banners' ? 1920 : 1200;
       fileBuffer = await sharp(req.file.buffer)
-        .webp({ quality: 80 })
+        .rotate() // auto-orient based on EXIF
+        .resize({
+          width: maxDimension,
+          height: maxDimension,
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .webp({ quality: 78, effort: 4 })
         .toBuffer();
       fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
       contentType = 'image/webp';
